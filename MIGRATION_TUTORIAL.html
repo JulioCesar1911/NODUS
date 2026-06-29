@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NODUS Supabase Migration Tutorial</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f5f5;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      color: #0A0A0A;
+      border-bottom: 3px solid #FF6B35;
+      padding-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 1.8em;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      color: #0A0A0A;
+      border-left: 4px solid #FF6B35;
+      padding-left: 15px;
+    }
+
+    h3 {
+      font-size: 1.3em;
+      margin-top: 25px;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    p {
+      margin-bottom: 15px;
+      line-height: 1.7;
+      color: #555;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .code-block {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+      margin: 15px 0;
+      border-left: 3px solid #FF6B35;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .comparison-item {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+    }
+
+    .comparison-item h4 {
+      margin-bottom: 10px;
+      font-size: 1.1em;
+      color: #0A0A0A;
+    }
+
+    .before {
+      background: #fff3f3;
+      border-left: 3px solid #d32f2f;
+    }
+
+    .after {
+      background: #f3fff3;
+      border-left: 3px solid #388e3c;
+    }
+
+    .diagram {
+      background: #f9f9f9;
+      border: 2px dashed #FF6B35;
+      padding: 20px;
+      border-radius: 5px;
+      margin: 20px 0;
+      font-family: monospace;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    .benefits-table {
+      width: 100%;
+      margin: 20px 0;
+      border-collapse: collapse;
+      border: 1px solid #ddd;
+    }
+
+    .benefits-table th {
+      background: #FF6B35;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .benefits-table td {
+      padding: 12px;
+      border: 1px solid #ddd;
+    }
+
+    .benefits-table tr:nth-child(even) {
+      background: #f5f5f5;
+    }
+
+    .highlight {
+      background: #ffffcc;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+
+    .checklist {
+      list-style: none;
+      margin: 15px 0;
+    }
+
+    .checklist li {
+      padding: 8px 0;
+      padding-left: 30px;
+      position: relative;
+    }
+
+    .checklist li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #388e3c;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .note {
+      background: #e3f2fd;
+      border-left: 4px solid #1976d2;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 3px;
+    }
+
+    .warning {
+      background: #fff3cd;
+      border-left: 4px solid #ff9800;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 3px;
+    }
+
+    .success {
+      background: #c8e6c9;
+      border-left: 4px solid #388e3c;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 3px;
+    }
+
+    .flow-diagram {
+      background: #f0f0f0;
+      padding: 20px;
+      border-radius: 5px;
+      margin: 20px 0;
+      border: 1px solid #ddd;
+    }
+
+    .arrow {
+      text-align: center;
+      color: #FF6B35;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .step {
+      background: white;
+      border: 2px solid #FF6B35;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+
+    .file-tree {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      margin: 15px 0;
+      border-left: 3px solid #FF6B35;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #FF6B35;
+      text-align: center;
+      color: #999;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📚 NODUS Supabase Migration Tutorial</h1>
+    <p style="font-size: 1.1em; color: #666; margin-top: 10px;">Un guide completo explicando cómo el frontend de NODUS cambió de datos hardcodeados a una base de datos Supabase PostgreSQL en vivo.</p>
+
+    <!-- Overview -->
+    <div class="section">
+      <h2>🎯 Visión General</h2>
+      <p>La migración de NODUS transforma la aplicación de un modelo estático a uno dinámico:</p>
+      <div class="note">
+        <strong>Antes:</strong> Todos los datos estaban en archivos TypeScript (500+ líneas de nodos, 1000+ líneas de contenido).
+        <br><br>
+        <strong>Después:</strong> Los datos viven en Supabase PostgreSQL con acceso seguro a través de APIs REST.
+      </div>
+    </div>
+
+    <!-- The Problem -->
+    <div class="section">
+      <h2>❌ El Problema (Antes)</h2>
+
+      <h3>Arquitectura Original</h3>
+      <p>NODUS almacenaba todo en archivos estáticos:</p>
+      <div class="code-block">
+// lib/graph-data.ts
+const nodeData = [
+  { id: "calc1", label: "Cálculo I", ring: 1, angle: 30, ... },
+  { id: "calc2", label: "Cálculo II", ring: 2, angle: 45, ... },
+  // ...cientos de líneas más
+]
+
+// lib/node-content.ts
+const nodeContent = {
+  calc1: {
+    summary: "...",
+    concepts: [...],
+    why: "...",
+    example: "...",
+    difficulty_note: "..."
+  },
+  // ...más contenido
+}
+      </div>
+
+      <h3>Problemas Identificados</h3>
+      <ul style="margin: 15px 0; margin-left: 20px;">
+        <li><strong>Contenido estático:</strong> Cualquier cambio requería un deploy de código</li>
+        <li><strong>Sin persistencia:</strong> Las nuevas contribuciones se perdían</li>
+        <li><strong>Escalabilidad:</strong> Archivos grandes ralentizan el bundle</li>
+        <li><strong>Sin dinámicas:</strong> Imposible distinguir contenido publicado vs borrador</li>
+        <li><strong>Errores propensos:</strong> Editar objetos TypeScript manualmente genera bugs</li>
+      </ul>
+    </div>
+
+    <!-- The Solution -->
+    <div class="section">
+      <h2>✅ La Solución (Después)</h2>
+
+      <h3>Nueva Arquitectura: Supabase PostgreSQL</h3>
+      <div class="diagram">
+┌─────────────────────┐
+│  Navegador / App    │
+│  (Lado del Cliente) │
+└──────────┬──────────┘
+           │ NEXT_PUBLIC_SUPABASE_ANON_KEY
+           │ (Pública, segura de commitear)
+           ▼
+┌──────────────────────────────────┐
+│  Supabase PostgreSQL Database    │
+│  ┌────────────────────────────┐  │
+│  │ nodes table                │  │ RLS: SELECT público cuando estado='published'
+│  ├────────────────────────────┤  │
+│  │ node_content table         │  │ RLS: SELECT público permitido
+│  ├────────────────────────────┤  │
+│  │ node_edges table           │  │ RLS: SELECT público permitido
+│  └────────────────────────────┘  │
+└──────────────────────────────────┘
+      </div>
+
+      <div class="success">
+        <strong>✓ Beneficios Inmediatos:</strong> Contenido dinámico, datos persistentes, seguridad integrada, escalabilidad, sin deployes para cambios de contenido.
+      </div>
+    </div>
+
+    <!-- Key Changes -->
+    <div class="section">
+      <h2>🔑 Cambios Clave Explicados</h2>
+
+      <!-- Change 1 -->
+      <div class="step">
+        <h3>1️⃣ Cliente Supabase (<code>lib/supabase.ts</code>)</h3>
+        <p><strong>¿Qué es?</strong> Un wrapper que inicializa el cliente JavaScript de Supabase.</p>
+
+        <div class="code-block">
+import { createClient } from "@supabase/supabase-js"
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Faltan variables de entorno de Supabase")
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+        </div>
+
+        <p><strong>¿Por qué?</strong></p>
+        <ul style="margin-left: 20px;">
+          <li>Usa variables de entorno en lugar de hardcodear URLs</li>
+          <li>El prefijo <code>NEXT_PUBLIC_</code> hace que sea seguro para el cliente</li>
+          <li>Fuente única de verdad para la conexión Supabase</li>
+        </ul>
+      </div>
+
+      <!-- Change 2 -->
+      <div class="step">
+        <h3>2️⃣ Capa de Datos (<code>lib/data.ts</code>)</h3>
+        <p><strong>¿Qué es?</strong> Funciones async que buscan datos de las tablas Supabase.</p>
+
+        <h4>Función: <code>fetchNodeData()</code></h4>
+        <p>Obtiene todos los nodos publicados con sus relaciones de prerequisitos.</p>
+
+        <div class="code-block">
+export async function fetchNodeData(): Promise&lt;NodeDatum[]&gt; {
+  // 1. Obtener todos los nodos publicados
+  const { data: nodes } = await supabase
+    .from("nodes")
+    .select("*")
+    .eq("estado", "published")  // Solo nodos publicados
+
+  // 2. Obtener las relaciones de prerequisitos
+  const { data: edges } = await supabase
+    .from("node_edges")
+    .select("*")
+
+  // 3. Construir mapa de prerequisites desde edges
+  const prereqMap = new Map&lt;string, string[]&gt;()
+  edges?.forEach((edge: any) => {
+    if (!prereqMap.has(edge.target_id)) {
+      prereqMap.set(edge.target_id, [])
+    }
+    prereqMap.get(edge.target_id)!.push(edge.source_id)
+  })
+
+  // 4. Retornar nodos formateados con prerequisites
+  return nodes.map((n: any) => ({
+    id: n.id,
+    label: n.label,
+    desc: n.description,
+    school: n.school,
+    ring: n.ring,
+    angle: n.angle,
+    diff: n.difficulty || 0,
+    prereqs: prereqMap.get(n.id) || [],
+  }))
+}
+        </div>
+
+        <p><strong>¿Por qué este enfoque?</strong></p>
+        <ul style="margin-left: 20px;">
+          <li><strong>Filtrado de datos:</strong> Solo nodos publicados son visibles a usuarios anónimos</li>
+          <li><strong>Cache:</strong> Los resultados se guardan para evitar solicitudes repetidas</li>
+          <li><strong>Datos estructurados:</strong> Los prerequisites se buscan por separado y se fusionan para eficiencia</li>
+        </ul>
+
+        <h4>Función: <code>getNodeContent(nodeId)</code></h4>
+        <div class="code-block">
+export async function getNodeContent(nodeId: string): Promise&lt;NodeContent | null&gt; {
+  const { data } = await supabase
+    .from("node_content")
+    .select("*")
+    .eq("node_id", nodeId)
+    .single()  // Espera exactamente una fila
+
+  return {
+    summary: data.summary,
+    concepts: data.concepts || [],
+    why: data.why,
+    example: data.example,
+    difficulty_note: data.difficulty_note,
+  }
+}
+        </div>
+
+        <p><strong>¿Por qué:</strong> Separa el contenido (a menudo grande) de los metadatos del nodo, busca solo cuando es necesario, y usa .single() para seguridad de tipos.</p>
+      </div>
+
+      <!-- Change 3 -->
+      <div class="step">
+        <h3>3️⃣ Componentes Actualizados</h3>
+
+        <h4><code>components/nodus/knowledge-graph.tsx</code></h4>
+        <div class="comparison">
+          <div class="comparison-item before">
+            <h4>Antes ❌</h4>
+            <div class="code-block" style="font-size: 11px; padding: 10px;">
+import { nodeData } from "@/lib/graph-data"
+
+export function KnowledgeGraph() {
+  // Usa nodeData directamente
+}
+            </div>
+          </div>
+          <div class="comparison-item after">
+            <h4>Después ✓</h4>
+            <div class="code-block" style="font-size: 11px; padding: 10px;">
+import { fetchNodeData } from "@/lib/data"
+
+export function KnowledgeGraph() {
+  const [nodes, setNodes] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true)
+      const data = await fetchNodeData()
+      setNodes(data)
+      setIsLoading(false)
+    }
+    load()
+  }, [])
+
+  if (isLoading) {
+    return &lt;p&gt;Cargando...&lt;/p&gt;
+  }
+
+  // Pasar nodos al hook
+  useGraphEngine(isDark, nodes, ...)
+}
+            </div>
+          </div>
+        </div>
+
+        <p><strong>¿Por qué estos cambios?</strong></p>
+        <ul style="margin-left: 20px;">
+          <li><strong>Estado de carga:</strong> Los usuarios ven retroalimentación mientras los datos se cargan</li>
+          <li><strong>Inyección de dependencias:</strong> Los nodos se pasan como parámetro, no se importan directamente</li>
+          <li><strong>Testeable:</strong> El hook puede testearse con nodos mock</li>
+        </ul>
+
+        <h4><code>hooks/use-graph-engine.ts</code> - Firma Cambiada</h4>
+        <div class="comparison">
+          <div class="comparison-item before">
+            <h4>Antes ❌</h4>
+            <div class="code-block" style="font-size: 11px; padding: 10px;">
+useGraphEngine(isDark, onNodeClick?, activeSchool?)
+            </div>
+          </div>
+          <div class="comparison-item after">
+            <h4>Después ✓</h4>
+            <div class="code-block" style="font-size: 11px; padding: 10px;">
+useGraphEngine(isDark, nodes, onNodeClick?, activeSchool?, ...)
+            </div>
+          </div>
+        </div>
+
+        <p><strong>¿Por qué:</strong></p>
+        <ul style="margin-left: 20px;">
+          <li><strong>Separación de responsabilidades:</strong> El hook no sabe de dónde vienen los datos</li>
+          <li><strong>Flexibilidad:</strong> Puede pasarse diferentes fuentes de datos</li>
+          <li><strong>Testeable:</strong> Fácil de testear con configuraciones específicas</li>
+        </ul>
+      </div>
+
+      <!-- Change 4 -->
+      <div class="step">
+        <h3>4️⃣ Páginas del Servidor</h3>
+
+        <h4><code>app/nodo/[id]/page.tsx</code></h4>
+        <div class="comparison">
+          <div class="comparison-item before">
+            <h4>Antes ❌</h4>
+            <div class="code-block" style="font-size: 11px; padding: 10px;">
+export function generateStaticParams() {
+  return nodeData.map(n => ({ id: n.id }))
+}
+
+export default function NodePage() {
+  const node = nodeData.find(...)
+  const content = nodeContent[id]
+}
+            </div>
+          </div>
+          <div class="comparison-item after">
+            <h4>Después ✓</h4>
+            <div class="code-block" style="font-size: 11px; padding: 10px;">
+// Sin generateStaticParams
+
+export default async function NodePage() {
+  const nodes = await fetchNodeData()
+  const node = nodes.find(...)
+  const content = await getNodeContent(id)
+}
+            </div>
+          </div>
+        </div>
+
+        <p><strong>¿Por qué:</strong></p>
+        <ul style="margin-left: 20px;">
+          <li><strong>Renderizado bajo demanda:</strong> Los nuevos nodos de Supabase están inmediatamente disponibles</li>
+          <li><strong>Sin generación estática:</strong> Evita páginas en caché desactualizado</li>
+          <li><strong>Actualizaciones en tiempo real:</strong> Los cambios de contenido se reflejan instantáneamente</li>
+        </ul>
+      </div>
+
+      <!-- Change 5 -->
+      <div class="step">
+        <h3>5️⃣ Script de Seed (<code>scripts/seed.ts</code>)</h3>
+        <p><strong>Propósito:</strong> Inicializar las tablas Supabase con datos de los archivos hardcodeados.</p>
+
+        <div class="code-block">
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY
+
+if (!supabaseUrl || !supabaseSecretKey) {
+  console.error("Faltan variables de entorno")
+  process.exit(1)
+}
+
+// Usar SECRET_KEY (privilegios de admin)
+const supabase = createClient(supabaseUrl, supabaseSecretKey)
+
+// 1. Leer lib/graph-data.ts
+// 2. Insertar nodos en tabla nodes con estado: "published"
+// 3. Insertar relaciones en tabla node_edges
+        </div>
+
+        <p><strong>¿Por qué este enfoque?</strong></p>
+        <ul style="margin-left: 20px;">
+          <li>Usa <code>SUPABASE_SECRET_KEY</code> (admin) en lugar de la clave ANON</li>
+          <li>Nunca hardcodeado — solo desde <code>.env.local</code></li>
+          <li>Operación única para bootstrapear la base de datos</li>
+        </ul>
+
+        <p><strong>Cómo ejecutar:</strong></p>
+        <div class="code-block">
+SUPABASE_URL=https://... SUPABASE_SECRET_KEY=sb_secret_... npx ts-node scripts/seed.ts
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Model -->
+    <div class="section">
+      <h2>🔒 Modelo de Seguridad</h2>
+
+      <h3>Tres Conceptos Clave</h3>
+
+      <h4>1. Claves Públicas (Seguras de commitear)</h4>
+      <div class="code-block">
+NEXT_PUBLIC_SUPABASE_URL=https://rfxjdgmfohgnwsxrtzih.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_jzDp_t0MD0RWbtbEThPDjQ_...
+      </div>
+      <ul style="margin-left: 20px;">
+        <li>Visibles en las solicitudes de red del navegador</li>
+        <li>Acceso de solo lectura al contenido publicado</li>
+        <li>Usado por todos los clientes</li>
+      </ul>
+
+      <h4>2. Clave Secreta (¡NUNCA commitear!)</h4>
+      <div class="code-block">
+SUPABASE_SECRET_KEY=sb_secret_rfxjdgmfohgnwsxrtzih_...
+      </div>
+      <ul style="margin-left: 20px;">
+        <li>Privilegios completos de admin</li>
+        <li>Usado SOLO en <code>.env.local</code> y scripts de servidor</li>
+        <li>Bloqueado por GitHub secret scanning</li>
+      </ul>
+
+      <h4>3. Políticas Row Level Security (RLS)</h4>
+      <div class="code-block">
+-- Cualquiera puede SELECT nodos publicados
+CREATE POLICY public_published_nodes ON nodes
+  FOR SELECT USING (estado = 'published')
+
+-- Cualquiera puede SELECT contenido
+CREATE POLICY public_content ON node_content
+  FOR SELECT USING (true)
+      </div>
+      <ul style="margin-left: 20px;">
+        <li>Enforcement a nivel de base de datos</li>
+        <li>Sin política = sin acceso (default deny)</li>
+        <li>La clave ANON solo puede leer; nunca modificar</li>
+      </ul>
+
+      <div class="warning">
+        <strong>⚠️ Importante:</strong> GitHub secret scanning bloqueará commits que contengan claves secretas. Todas las credenciales deben estar en <code>.env.local</code>, nunca en archivos comprometidos.
+      </div>
+    </div>
+
+    <!-- Environment Variables -->
+    <div class="section">
+      <h2>🌍 Variables de Entorno</h2>
+
+      <h3>Archivos Requeridos</h3>
+
+      <h4><code>.env.local</code> (¡Nunca commitear!)</h4>
+      <div class="code-block">
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_your_key_here
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SECRET_KEY=sb_secret_your_key_here
+      </div>
+
+      <h4><code>.env.example</code> (Commit a git)</h4>
+      <div class="code-block">
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_your_key_here
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SECRET_KEY=sb_secret_your_key_here
+      </div>
+    </div>
+
+    <!-- Data Flow -->
+    <div class="section">
+      <h2>📊 Flujo de Datos</h2>
+
+      <h3>Cuando un usuario visita <code>/nodo/calc1</code>:</h3>
+      <div class="flow-diagram">
+        <div class="step">
+          1. El navegador solicita https://nodus-beta.vercel.app/nodo/calc1
+        </div>
+        <div class="arrow">↓</div>
+
+        <div class="step">
+          2. Servidor Next.js (Node.js runtime en Vercel)
+          <ul style="margin-top: 10px; margin-left: 20px;">
+            <li>Llama fetchNodeData()</li>
+            <li style="margin-left: 20px;">└─ Usa NEXT_PUBLIC_SUPABASE_ANON_KEY</li>
+            <li style="margin-left: 20px;">└─ Consulta: SELECT * FROM nodes WHERE estado='published'</li>
+            <li style="margin-left: 20px;">└─ Retorna ~92 nodos</li>
+            <li>Encuentra nodo con id="calc1"</li>
+            <li>Llama getNodeContent("calc1")</li>
+            <li style="margin-left: 20px;">└─ Consulta: SELECT * FROM node_content WHERE node_id='calc1'</li>
+            <li style="margin-left: 20px;">└─ Retorna: summary, concepts, examples, etc.</li>
+          </ul>
+        </div>
+        <div class="arrow">↓</div>
+
+        <div class="step">
+          3. Renderiza HTML con contenido
+        </div>
+        <div class="arrow">↓</div>
+
+        <div class="step">
+          4. El navegador recibe la página pre-renderizada (sin estado de carga necesario)
+        </div>
+      </div>
+
+      <h3>Cuando el usuario abre el grafo (<code>/grafo</code>):</h3>
+      <div class="flow-diagram">
+        <div class="step">
+          1. El navegador carga /grafo (componente cliente)
+        </div>
+        <div class="arrow">↓</div>
+
+        <div class="step">
+          2. React monta KnowledgeGraph
+          <ul style="margin-top: 10px; margin-left: 20px;">
+            <li>Muestra "Cargando grafo..." (estado de carga)</li>
+            <li>useEffect llama fetchNodeData()</li>
+            <li style="margin-left: 20px;">└─ Fetch del lado del navegador con ANON_KEY</li>
+            <li style="margin-left: 20px;">└─ Retorna ~92 nodos</li>
+            <li>Llama useGraphEngine(isDark, nodes, ...)</li>
+            <li style="margin-left: 20px;">└─ Canvas renderiza con nodos, bordes, interacciones</li>
+          </ul>
+        </div>
+        <div class="arrow">↓</div>
+
+        <div class="step">
+          3. Grafo completamente interactivo
+        </div>
+      </div>
+    </div>
+
+    <!-- Testing -->
+    <div class="section">
+      <h2>✅ Checklist de Testing</h2>
+      <ul class="checklist">
+        <li>Archivos hardcodeados (<code>lib/graph-data.ts</code>, <code>lib/node-content.ts</code>) — mantener como respaldo</li>
+        <li>Sin secretos en el historial de git</li>
+        <li>Variables de entorno Vercel configuradas (<code>NEXT_PUBLIC_SUPABASE_*</code>)</li>
+        <li>Políticas RLS de Supabase creadas y testeadas</li>
+        <li>Script de seed ejecutado sin errores</li>
+        <li>Páginas buscan y muestran datos correctamente</li>
+        <li>Build exitoso con <code>npm run build</code></li>
+        <li>Servidor dev funciona con <code>npm run dev</code></li>
+      </ul>
+    </div>
+
+    <!-- Benefits -->
+    <div class="section">
+      <h2>🚀 Beneficios de Este Enfoque</h2>
+      <table class="benefits-table">
+        <tr>
+          <th>Aspecto</th>
+          <th>Antes</th>
+          <th>Después</th>
+        </tr>
+        <tr>
+          <td><strong>Actualizaciones de contenido</strong></td>
+          <td>Requiere deploy de código</td>
+          <td>Instantáneo (actualizar DB)</td>
+        </tr>
+        <tr>
+          <td><strong>Persistencia de datos</strong></td>
+          <td>Se pierden con cada redeploy</td>
+          <td>Persistentes en PostgreSQL</td>
+        </tr>
+        <tr>
+          <td><strong>Escala</strong></td>
+          <td>Todo el codebase para todos los nodos</td>
+          <td>Solo nodos necesarios buscan</td>
+        </tr>
+        <tr>
+          <td><strong>Seguridad</strong></td>
+          <td>Sin control de acceso</td>
+          <td>RLS + separación anon/admin</td>
+        </tr>
+        <tr>
+          <td><strong>Tiempo real</strong></td>
+          <td>Estático en tiempo de build</td>
+          <td>Dinámico bajo demanda</td>
+        </tr>
+        <tr>
+          <td><strong>Testabilidad</strong></td>
+          <td>Difícil hacer mock</td>
+          <td>Fácil inyectar datos</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Summary -->
+    <div class="section">
+      <h2>📝 Resumen</h2>
+      <p>La migración de NODUS reemplaza archivos estáticos hardcodeados con un backend Supabase dinámico:</p>
+
+      <ol style="margin-left: 20px; line-height: 2;">
+        <li><strong><code>lib/supabase.ts</code></strong> — Inicialización del cliente</li>
+        <li><strong><code>lib/data.ts</code></strong> — Búsqueda async de datos con consultas Supabase</li>
+        <li><strong>Componentes</strong> — Buscan datos en mount, muestran estados de carga, pasan datos vía inyección de dependencias</li>
+        <li><strong>Páginas del servidor</strong> — Renderizado async con datos buscados en el servidor</li>
+        <li><strong>Seguridad</strong> — Políticas RLS, claves secretas solo en ambiente, sin credenciales hardcodeadas</li>
+      </ol>
+
+      <div class="success" style="margin-top: 20px;">
+        <strong>Resultado:</strong> Una plataforma de grafo de conocimiento en vivo, dinámica, segura y escalable.
+      </div>
+    </div>
+
+    <footer>
+      <p>NODUS Supabase Migration Tutorial — Completo y Seguro ✓</p>
+      <p>Última actualización: 29 de Junio, 2026</p>
+    </footer>
+  </div>
+</body>
+</html>
