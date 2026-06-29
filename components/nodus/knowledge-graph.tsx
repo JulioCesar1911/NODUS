@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useGraphEngine, type GraphMode } from "@/hooks/use-graph-engine"
-import { nodeData, schoolsLight } from "@/lib/graph-data"
+import { fetchNodeData, type NodeDatum } from "@/lib/data"
+import { schoolsLight } from "@/lib/graph-data"
 
 interface Props {
   compact?: boolean
@@ -25,18 +26,34 @@ const SCHOOL_LABELS: Record<string, string> = {
   hum:    "HUMANIDADES",
 }
 
-// Nodes sorted by school order then ring, excluding center
-const DEST_NODES = schoolsLight
-  .flatMap(s => nodeData.filter(n => n.school === s.id).sort((a, b) => a.ring - b.ring))
-
 export function KnowledgeGraph({ compact = false, activeSchool }: Props) {
   const [isDark, setIsDark]                     = useState(false)
+  const [nodes, setNodes]                       = useState<NodeDatum[]>([])
+  const [isLoading, setIsLoading]               = useState(true)
   const [activeMode, setActiveMode]             = useState<GraphMode>("explore")
   const [selectedEgoId, setSelectedEgoId]       = useState<string | null>(null)
   const [selectedDestId, setSelectedDestId]     = useState<string | null>(null)
   // panelId: the node shown in the detail panel — works across all three modes
   const [panelId, setPanelId]                   = useState<string | null>(null)
   const router = useRouter()
+
+  // Nodes sorted by school order then ring, excluding center
+  const DEST_NODES = useMemo(() =>
+    schoolsLight.flatMap(s =>
+      nodes.filter(n => n.school === s.id).sort((a, b) => a.ring - b.ring)
+    ),
+    [nodes]
+  )
+
+  useEffect(() => {
+    const loadNodes = async () => {
+      setIsLoading(true)
+      const data = await fetchNodeData()
+      setNodes(data)
+      setIsLoading(false)
+    }
+    loadNodes()
+  }, [])
 
   useEffect(() => {
     const root = document.documentElement
@@ -80,9 +97,9 @@ export function KnowledgeGraph({ compact = false, activeSchool }: Props) {
   }
 
   const { canvasRef, tooltipData, tooltipPosition, tooltipVisible, legendItems, noRoutePath } =
-    useGraphEngine(isDark, handleNodeClick, activeSchool, activeMode, selectedEgoId, selectedDestId)
+    useGraphEngine(isDark, nodes, handleNodeClick, activeSchool, activeMode, selectedEgoId, selectedDestId)
 
-  const panelNode   = panelId ? nodeData.find(n => n.id === panelId) : null
+  const panelNode   = panelId ? nodes.find(n => n.id === panelId) : null
   const panelSchool = panelNode ? schoolsLight.find(s => s.id === panelNode.school) : null
 
   return (
@@ -168,9 +185,14 @@ export function KnowledgeGraph({ compact = false, activeSchool }: Props) {
 
       {/* Canvas wrapper */}
       <div
-        className="relative overflow-hidden"
+        className="relative overflow-hidden bg-background"
         style={{ height: compact ? 450 : 600 }}
       >
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-20">
+            <p className="font-mono text-sm text-muted-foreground">Cargando grafo...</p>
+          </div>
+        )}
         <canvas
           ref={canvasRef}
           style={{ display: "block", width: "100%", height: "100%" }}

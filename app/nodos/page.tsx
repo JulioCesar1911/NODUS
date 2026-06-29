@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { Navigation } from "@/components/nodus/navigation"
 import { Footer } from "@/components/nodus/footer"
-import { nodeData, schoolsLight } from "@/lib/graph-data"
+import { schoolsLight } from "@/lib/graph-data"
+import { fetchNodeData } from "@/lib/data"
 
 export const metadata = {
   title: "Todos los nodos — NODUS",
@@ -31,7 +32,9 @@ function DiffDots({ diff, color }: { diff: number; color: string }) {
   )
 }
 
-export default function NodosPage() {
+export default async function NodosPage() {
+  const nodeData = await fetchNodeData()
+
   const nodesBySchool = SCHOOL_ORDER.map(schoolId => {
     const school = schoolsLight.find(s => s.id === schoolId)!
     const nodes  = nodeData

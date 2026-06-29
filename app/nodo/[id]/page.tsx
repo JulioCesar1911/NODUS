@@ -2,16 +2,13 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Navigation } from "@/components/nodus/navigation"
 import { Footer } from "@/components/nodus/footer"
-import { nodeData, schoolsLight } from "@/lib/graph-data"
-import { nodeContent } from "@/lib/node-content"
-
-export function generateStaticParams() {
-  return nodeData.map(n => ({ id: n.id }))
-}
+import { schoolsLight } from "@/lib/graph-data"
+import { fetchNodeData, getNodeContent } from "@/lib/data"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const node = nodeData.find(n => n.id === id)
+  const nodes = await fetchNodeData()
+  const node = nodes.find(n => n.id === id)
   if (!node) return {}
   return {
     title: `${node.label} — NODUS`,
@@ -21,22 +18,23 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function NodePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const node = nodeData.find(n => n.id === id)
+  const nodes = await fetchNodeData()
+  const node = nodes.find(n => n.id === id)
   if (!node) notFound()
 
-  const content = nodeContent[node.id]
+  const content = await getNodeContent(id)
   const school  = schoolsLight.find(s => s.id === node.school)
   const schoolColor = school?.color ?? "#0A0A0A"
   const schoolName  = school?.name ?? node.school.toUpperCase()
 
-  const nodeMap     = new Map(nodeData.map(n => [n.id, n]))
+  const nodeMap     = new Map(nodes.map(n => [n.id, n]))
   const prereqNodes = node.prereqs
     .map(pid => nodeMap.get(pid))
     .filter((n): n is NonNullable<typeof n> => n !== undefined && n.id !== "center")
 
-  const unlocksNodes = nodeData.filter(n => n.prereqs.includes(node.id))
+  const unlocksNodes = nodes.filter(n => n.prereqs.includes(node.id))
 
-  const sameSchool = nodeData
+  const sameSchool = nodes
     .filter(n => n.school === node.school && n.id !== node.id)
     .sort((a, b) => a.ring - b.ring)
     .slice(0, 5)

@@ -1,14 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navigation } from "@/components/nodus/navigation"
 import { KnowledgeGraph } from "@/components/nodus/knowledge-graph"
-import { nodeData } from "@/hooks/use-graph-engine"
+import { fetchNodeData, type NodeDatum } from "@/lib/data"
 
 const AREAS = ["TODOS", "MATEMÁTICAS", "CS", "INGENIERÍA", "NEGOCIOS", "SALUD", "HUMANIDADES"]
 
 export default function GrafoPage() {
   const [active, setActive] = useState("TODOS")
+  const [nodes, setNodes] = useState<NodeDatum[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadNodes = async () => {
+      setIsLoading(true)
+      const data = await fetchNodeData()
+      setNodes(data)
+      setIsLoading(false)
+    }
+    loadNodes()
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -23,7 +35,7 @@ export default function GrafoPage() {
               GRAFO DE CONOCIMIENTO
             </h1>
             <span className="font-mono text-sm text-muted-foreground">
-              {nodeData.length} nodos
+              {isLoading ? "Cargando..." : `${nodes.length} nodos`}
             </span>
           </div>
 

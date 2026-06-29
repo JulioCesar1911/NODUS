@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Search, User } from "lucide-react"
-import { nodeData, schoolsLight } from "@/lib/graph-data"
+import { fetchNodeData, type NodeDatum } from "@/lib/data"
+import { schoolsLight } from "@/lib/graph-data"
 
 type LensId = "cs" | "ingenieria" | "finanzas" | "datos"
 
@@ -18,10 +19,19 @@ const LENTES: { id: LensId; label: string }[] = [
 export function Navigation() {
   const router = useRouter()
 
+  const [nodes, setNodes]           = useState<NodeDatum[]>([])
   const [query, setQuery]           = useState("")
   const [searchOpen, setSearchOpen] = useState(false)
   const [selectedLens, setSelectedLens] = useState<LensId>("cs")
   const [lensOpen, setLensOpen]     = useState(false)
+
+  useEffect(() => {
+    const loadNodes = async () => {
+      const data = await fetchNodeData()
+      setNodes(data)
+    }
+    loadNodes()
+  }, [])
 
   useEffect(() => {
     const stored = localStorage.getItem("nodus-lente")
@@ -30,15 +40,18 @@ export function Navigation() {
     }
   }, [])
 
-  const results = query
-    ? nodeData
-        .filter(n => n.id !== "center")
-        .filter(n =>
-          n.label.toLowerCase().includes(query.toLowerCase()) ||
-          n.desc.toLowerCase().includes(query.toLowerCase())
-        )
-        .slice(0, 6)
-    : []
+  const results = useMemo(() =>
+    query
+      ? nodes
+          .filter(n => n.id !== "center")
+          .filter(n =>
+            n.label.toLowerCase().includes(query.toLowerCase()) ||
+            n.desc.toLowerCase().includes(query.toLowerCase())
+          )
+          .slice(0, 6)
+      : [],
+    [query, nodes]
+  )
 
   function handleLensSelect(id: LensId) {
     setSelectedLens(id)

@@ -1,8 +1,9 @@
 "use client"
 
 import { useRef, useState, useEffect } from "react"
-import { nodeData, schoolsDark, schoolsLight } from "@/lib/graph-data"
-import type { School, NodeDatum } from "@/lib/graph-data"
+import { schoolsDark, schoolsLight } from "@/lib/graph-data"
+import type { School } from "@/lib/graph-data"
+import type { NodeDatum } from "@/lib/data"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,9 +25,6 @@ type ComputedNode = NodeDatum & { x: number; y: number; w: number; h: number }
 
 type Edge = { from: ComputedNode; to: ComputedNode }
 
-// re-export so consumers don't need to import from lib separately
-export { nodeData }
-
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SCHOOL_FILTER_MAP: Record<string, string> = {
@@ -45,8 +43,8 @@ const ACCENT_FG = "#0A0A0A"
 
 // ─── Geometry ─────────────────────────────────────────────────────────────────
 
-function computeNodes(): ComputedNode[] {
-  return nodeData.map(n => {
+function computeNodes(nodes: NodeDatum[]): ComputedNode[] {
+  return nodes.map(n => {
     if (n.ring === 0) return { ...n, x: CX, y: CY, w: 66, h: 32 }
     const r = n.ring * 95
     const a = (n.angle - 90) * (Math.PI / 180)
@@ -74,8 +72,8 @@ function buildEdges(nodes: ComputedNode[]): Edge[] {
 
 // ─── BFS path (RUTA mode) ─────────────────────────────────────────────────────
 
-function computeRoutePath(destId: string): { ids: Set<string>; ordered: string[] } {
-  const nodeMap = new Map(nodeData.map(n => [n.id, n]))
+function computeRoutePath(destId: string, nodes: NodeDatum[]): { ids: Set<string>; ordered: string[] } {
+  const nodeMap = new Map(nodes.map(n => [n.id, n]))
   const queue: Array<{ id: string; path: string[] }> = [{ id: destId, path: [destId] }]
   const visited = new Set<string>([destId])
 
@@ -124,6 +122,7 @@ function getVisibleSet(
 
 export function useGraphEngine(
   isDark: boolean,
+  nodes: NodeDatum[],
   onNodeClick?: (nodeId: string) => void,
   activeSchool?: string,
   mode: GraphMode = "explore",
@@ -167,7 +166,7 @@ export function useGraphEngine(
   // Recompute BFS path when destination or mode changes
   useEffect(() => {
     if (mode === "ruta" && selectedDestId) {
-      const result = computeRoutePath(selectedDestId)
+      const result = computeRoutePath(selectedDestId, nodes)
       stateRef.current.routePathIds    = result.ids
       stateRef.current.routePathOrdered = result.ordered
       setNoRoutePath(result.ids.size === 0)
@@ -176,7 +175,7 @@ export function useGraphEngine(
       stateRef.current.routePathOrdered = []
       setNoRoutePath(false)
     }
-  }, [mode, selectedDestId])
+  }, [mode, selectedDestId, nodes])
 
   const legendItems: LegendItem[] = (isDark ? schoolsDark : schoolsLight).map(s => ({
     id:    s.id,
@@ -191,7 +190,7 @@ export function useGraphEngine(
     const st = stateRef.current
     st.isDark   = isDark
     st.schools  = isDark ? schoolsDark : schoolsLight
-    st.nodes    = computeNodes()
+    st.nodes    = computeNodes(nodes)
     st.edges    = buildEdges(st.nodes)
 
     const dpr = window.devicePixelRatio || 1
@@ -656,7 +655,7 @@ export function useGraphEngine(
       canvas.removeEventListener("mouseleave", onMouseLeave)
       window.removeEventListener("mouseup",    onWindowMouseUp)
     }
-  }, [isDark, activeSchool])
+  }, [isDark, activeSchool, nodes])
 
   return { canvasRef, tooltipData, tooltipPosition, tooltipVisible, legendItems, noRoutePath }
 }
