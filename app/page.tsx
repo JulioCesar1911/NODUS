@@ -5,6 +5,7 @@ import { LearningPaths } from "@/components/nodus/learning-paths"
 import { RecentNodes } from "@/components/nodus/recent-nodes"
 import { Footer } from "@/components/nodus/footer"
 
+// Force Vercel redeploy
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
